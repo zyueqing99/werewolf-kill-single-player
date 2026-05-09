@@ -44,7 +44,7 @@
 
 - 前端：React + TypeScript + Vite
 - 后端：Node.js + TypeScript + Fastify
-- 实时通信：WebSocket
+- 通信方式：HTTP JSON API
 - 模型接入：OpenAI 兼容 API
 
 后端是权威状态源，负责所有规则判断、状态推进、夜间结算、投票结算、胜负判断、AI prompt 构造和模型调用。前端只展示真人玩家当前可见的信息，并提交真人玩家操作。
@@ -153,7 +153,9 @@ Agent 需要支持以下任务：
 
 ## 数据流
 
-前端通过 HTTP 或 WebSocket 发起操作：
+第一版采用普通 HTTP JSON API。前端提交动作后，后端完成合法性校验、必要的 AI 决策、状态推进，并返回最新的前端可见状态。这个方式足够支撑单机、单用户、单局游戏，也能减少实时连接管理、断线重连和双向事件同步的复杂度。
+
+前端发起的主要操作包括：
 
 - startGame
 - submitDaySpeech
@@ -161,7 +163,7 @@ Agent 需要支持以下任务：
 - submitNightAction
 - requestNext
 
-后端处理动作后推进状态机，并通过 WebSocket 推送新的前端可见状态。
+后端处理动作后返回新的前端可见状态。若某一步需要等待模型生成 AI 发言或 AI 决策，前端显示 loading 状态，等待请求返回即可。
 
 前端可见状态只包含：
 
@@ -260,6 +262,7 @@ Agent 需要支持以下任务：
 - 对局复盘
 - 调试面板
 - 本地存档
+- WebSocket 或流式响应，用于更细腻的 AI 打字效果、多端同步或观战模式
 - Electron 桌面端打包
 - 本地模型支持
 - 观战模式和纯 AI 自动对局
