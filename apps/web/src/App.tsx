@@ -53,6 +53,7 @@ export function App() {
         <ActionPanel
           busy={busy}
           state={state}
+          onNewGame={() => run(startGame)}
           onNext={() => run(requestNext)}
           onSpeech={(content) => run(() => submitSpeech(state.humanPlayerId, content))}
           onVote={(targetId) => run(() => submitVote(state.humanPlayerId, targetId))}

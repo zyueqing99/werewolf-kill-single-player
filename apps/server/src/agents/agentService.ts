@@ -59,9 +59,9 @@ export function createAgentService(modelClient: ModelClient): AgentService {
       try {
         const result = await completeObject(modelClient, buildSpeechPrompt(game, agentId));
         const speech = stringField(result?.speech);
-        return speech ?? fallbackSpeech();
+        return speech ?? fallbackSpeech(game, agentId);
       } catch {
-        return fallbackSpeech();
+        return fallbackSpeech(game, agentId);
       }
     },
 

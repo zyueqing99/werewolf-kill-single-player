@@ -43,7 +43,9 @@ describe("agent 兜底策略", () => {
     expect(fallbackWitchAction()).toEqual({ useAntidote: false });
   });
 
-  it("投票兜底返回弃票", () => {
-    expect(fallbackVote()).toEqual({});
+  it("投票兜底在有候选目标时返回目标", () => {
+    const game = { ...createGame({ rng: () => 0 }), phase: "day_vote" as const };
+
+    expect(fallbackVote(game, "p1").targetId).toBeTruthy();
   });
 });

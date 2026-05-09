@@ -12,6 +12,7 @@ interface ActionPanelProps {
     useAntidote?: boolean;
     poisonTargetId?: string;
   }): Promise<void>;
+  onNewGame(): Promise<void>;
   onNext(): Promise<void>;
 }
 
@@ -19,7 +20,7 @@ function playerName(state: VisibleGameState, playerId: string): string {
   return state.players.find((player) => player.id === playerId)?.name ?? playerId;
 }
 
-export function ActionPanel({ state, busy, onSpeech, onVote, onNightAction, onNext }: ActionPanelProps) {
+export function ActionPanel({ state, busy, onSpeech, onVote, onNightAction, onNewGame, onNext }: ActionPanelProps) {
   const [speech, setSpeech] = useState("");
   const action = state.currentAction;
 
@@ -29,8 +30,14 @@ export function ActionPanel({ state, busy, onSpeech, onVote, onNightAction, onNe
       <p className="phase">当前阶段：{state.phase}</p>
       {state.winner ? <p className="winner">胜利方：{state.winner === "werewolves" ? "狼人" : "好人"}</p> : null}
 
-      {action.type === "none" ? (
-        <button disabled={busy || state.phase === "game_over"} onClick={onNext}>
+      {state.phase === "game_over" ? (
+        <button disabled={busy} onClick={onNewGame}>
+          重新开局
+        </button>
+      ) : null}
+
+      {action.type === "none" && state.phase !== "game_over" ? (
+        <button disabled={busy} onClick={onNext}>
           继续
         </button>
       ) : null}

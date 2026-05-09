@@ -1,12 +1,12 @@
 import Fastify from "fastify";
 
-import { fallbackSpeech, fallbackVote, fallbackWerewolfKill, fallbackSeerCheck, fallbackWitchAction } from "../game/fallbacks";
 import { GameSession } from "./gameSession";
+import { fallbackSpeech, fallbackVote, fallbackWerewolfKill, fallbackSeerCheck, fallbackWitchAction } from "../game/fallbacks";
 
-function createFallbackAgentService() {
+export function createFallbackAgentService() {
   return {
-    async speech() {
-      return fallbackSpeech();
+    async speech(game, agentId) {
+      return fallbackSpeech(game, agentId);
     },
     async vote() {
       return fallbackVote();
@@ -25,7 +25,7 @@ function createFallbackAgentService() {
   } as ConstructorParameters<typeof GameSession>[0];
 }
 
-export function buildServer(session = new GameSession(createFallbackAgentService())) {
+export function buildServer(session = new GameSession()) {
   const app = Fastify({ logger: false });
 
   app.get("/api/health", async () => ({ ok: true }));

@@ -31,6 +31,7 @@ function publicContext(game: GameState, agentId: string): string {
   return [
     "你正在玩 6 人狼人杀。只能根据以下信息行动，不要假装知道未给出的隐藏身份。",
     `你是：${view.self.name}（${view.self.id}）`,
+    `你的性格：${view.self.persona?.tone ?? "正常"}，攻击性：${view.self.persona?.aggression ?? "medium"}`,
     `当前轮次：${view.round}`,
     `当前阶段：${view.phase}`,
     `公开玩家：${JSON.stringify(publicPlayers)}`,
@@ -42,7 +43,7 @@ function publicContext(game: GameState, agentId: string): string {
 export function buildSpeechPrompt(game: GameState, agentId: string): string {
   return [
     publicContext(game, agentId),
-    "请生成你的白天发言。",
+    "请生成你的白天发言。要求：必须结合公开死亡、公开发言、你的身份视角和当前局势；不要复读空话；如果你是狼人可以伪装好人并尝试带偏；如果你是好人要提出怀疑对象和理由。",
     "只返回 JSON：{\"speech\":\"你的发言\"}。"
   ].join("\n");
 }
@@ -50,7 +51,7 @@ export function buildSpeechPrompt(game: GameState, agentId: string): string {
 export function buildVotePrompt(game: GameState, agentId: string): string {
   return [
     publicContext(game, agentId),
-    "请决定投票目标，也可以弃票。",
+    "请决定投票目标，也可以弃票。要求：根据公开发言、死亡信息、身份视角和阵营目标选择最合理的目标；除非完全没有候选目标，否则不要轻易弃票。",
     "只返回 JSON：{\"targetId\":\"玩家 ID\"} 或 {\"targetId\":null}。"
   ].join("\n");
 }
