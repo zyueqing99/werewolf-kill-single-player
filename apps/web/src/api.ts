@@ -5,8 +5,13 @@ interface StateResponse {
 }
 
 async function requestState(path: string, init?: RequestInit): Promise<VisibleGameState> {
+  const headers = new Headers(init?.headers);
+  if (init?.body) {
+    headers.set("content-type", "application/json");
+  }
+
   const response = await fetch(path, {
-    headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
+    headers,
     ...init
   });
 
