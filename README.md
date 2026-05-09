@@ -1,0 +1,1 @@
+# werewolf-kill-single-player
