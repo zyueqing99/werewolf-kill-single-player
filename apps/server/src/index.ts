@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { buildServer } from "./api/server";
 
 const port = Number(process.env.PORT ?? 8787);
