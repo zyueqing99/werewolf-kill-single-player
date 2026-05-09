@@ -29,4 +29,17 @@ describe("agentService", () => {
 
     await expect(service.vote(game, agent.id)).resolves.toEqual({});
   });
+
+  it("能解析 Markdown 代码块中的 JSON", async () => {
+    const game = createGame({ rng: () => 0 });
+    const agent = game.players.find((player) => player.kind === "agent");
+
+    if (!agent) throw new Error("测试夹具缺少 agent");
+
+    const service = createAgentService({
+      completeJson: async () => "```json\n{\"speech\":\"我会重点观察今天谁在强行带票。\"}\n```"
+    });
+
+    await expect(service.speech(game, agent.id)).resolves.toBe("我会重点观察今天谁在强行带票。");
+  });
 });

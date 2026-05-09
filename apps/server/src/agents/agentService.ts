@@ -27,6 +27,23 @@ export interface AgentService {
 }
 
 function parseJsonObject(raw: string): Record<string, unknown> | undefined {
+  const candidates = [
+    raw,
+    raw.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1],
+    raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)
+  ].filter((value): value is string => Boolean(value?.trim()));
+
+  for (const candidate of candidates) {
+    const parsed = parseJsonCandidate(candidate);
+    if (parsed) {
+      return parsed;
+    }
+  }
+
+  return undefined;
+}
+
+function parseJsonCandidate(raw: string): Record<string, unknown> | undefined {
   try {
     const parsed = JSON.parse(raw) as unknown;
     return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : undefined;
@@ -59,8 +76,13 @@ export function createAgentService(modelClient: ModelClient): AgentService {
       try {
         const result = await completeObject(modelClient, buildSpeechPrompt(game, agentId));
         const speech = stringField(result?.speech);
-        return speech ?? fallbackSpeech(game, agentId);
+        if (!speech) {
+          console.warn(`[agent:fallback] speech ${agentId}: missing speech`);
+          return fallbackSpeech(game, agentId);
+        }
+        return speech;
       } catch {
+        console.warn(`[agent:fallback] speech ${agentId}: model error`);
         return fallbackSpeech(game, agentId);
       }
     },
@@ -74,8 +96,10 @@ export function createAgentService(modelClient: ModelClient): AgentService {
           return { targetId };
         }
 
+        console.warn(`[agent:fallback] vote ${agentId}: invalid target`);
         return fallbackVote();
       } catch {
+        console.warn(`[agent:fallback] vote ${agentId}: model error`);
         return fallbackVote();
       }
     },
@@ -89,9 +113,11 @@ export function createAgentService(modelClient: ModelClient): AgentService {
           return { targetId };
         }
 
+        console.warn(`[agent:fallback] werewolfKill ${agentId}: invalid target`);
         const fallbackTargetId = fallbackWerewolfKill(game, agentId);
         return fallbackTargetId ? { targetId: fallbackTargetId } : {};
       } catch {
+        console.warn(`[agent:fallback] werewolfKill ${agentId}: model error`);
         const fallbackTargetId = fallbackWerewolfKill(game, agentId);
         return fallbackTargetId ? { targetId: fallbackTargetId } : {};
       }
@@ -106,9 +132,11 @@ export function createAgentService(modelClient: ModelClient): AgentService {
           return { targetId };
         }
 
+        console.warn(`[agent:fallback] seerCheck ${agentId}: invalid target`);
         const fallbackTargetId = fallbackSeerCheck(game, agentId);
         return fallbackTargetId ? { targetId: fallbackTargetId } : {};
       } catch {
+        console.warn(`[agent:fallback] seerCheck ${agentId}: model error`);
         const fallbackTargetId = fallbackSeerCheck(game, agentId);
         return fallbackTargetId ? { targetId: fallbackTargetId } : {};
       }
@@ -121,6 +149,7 @@ export function createAgentService(modelClient: ModelClient): AgentService {
         const useAntidote = result?.useAntidote === true;
 
         if (poisonTargetId && !getPoisonCandidates(game, agentId).includes(poisonTargetId)) {
+          console.warn(`[agent:fallback] witchAction ${agentId}: invalid poison target`);
           return fallbackWitchAction();
         }
 
@@ -129,6 +158,7 @@ export function createAgentService(modelClient: ModelClient): AgentService {
           ...(poisonTargetId ? { poisonTargetId } : {})
         };
       } catch {
+        console.warn(`[agent:fallback] witchAction ${agentId}: model error`);
         return fallbackWitchAction();
       }
     }
