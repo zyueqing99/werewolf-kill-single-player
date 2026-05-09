@@ -149,6 +149,26 @@ export function advanceAfterNight(game: GameState): GameState {
   return applyWinner(next);
 }
 
+export function advanceToDaySpeech(game: GameState): GameState {
+  if (game.phase !== "day_announcement") {
+    throw new Error("当前不能进入发言阶段");
+  }
+
+  const next = cloneGame(game);
+  next.phase = "day_speech";
+  return next;
+}
+
+export function advanceToDayVote(game: GameState): GameState {
+  if (game.phase !== "day_speech") {
+    throw new Error("当前不能进入投票阶段");
+  }
+
+  const next = cloneGame(game);
+  next.phase = "day_vote";
+  return next;
+}
+
 export function submitSpeech(game: GameState, playerId: string, content: string): GameState {
   if (game.phase !== "day_speech") {
     throw new Error("当前不是发言阶段");
