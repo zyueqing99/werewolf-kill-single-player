@@ -1,66 +1,66 @@
-# Werewolf 6-Player MVP Implementation Plan
+# 6 人局狼人杀 MVP 实施计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **给执行 agent 的要求：** 必须使用 `superpowers:subagent-driven-development`（推荐）或 `superpowers:executing-plans` 按任务执行。本计划使用复选框语法记录进度。
 
-**Goal:** Build a local browser-based 6-player single-player Werewolf game where one human player joins five AI agents and can complete a full match.
+**目标：** 构建一个本地浏览器版 6 人狼人杀 MVP：1 名真人玩家随机获得身份，和 5 名 AI agent 完成一整局对局。
 
-**Architecture:** Use a TypeScript monorepo with shared domain types, a pure backend game engine, an OpenAI-compatible agent adapter, HTTP JSON API routes, and a React/Vite frontend. The backend remains the authoritative state source and only returns the human player's visible state.
+**架构：** 使用 TypeScript 工作区组织代码：共享领域类型、后端纯规则引擎、OpenAI 兼容 agent 适配层、HTTP JSON API、React/Vite 前端。后端是唯一权威状态源，只向前端返回真人玩家可见状态。
 
-**Tech Stack:** TypeScript, pnpm workspaces, Node.js, Fastify, Vitest, React, Vite, CSS modules or plain CSS, OpenAI-compatible chat completions API.
-
----
-
-## File Structure
-
-Create a small workspace with focused packages:
-
-- `package.json`: root workspace scripts.
-- `pnpm-workspace.yaml`: workspace package list.
-- `tsconfig.base.json`: shared TypeScript compiler settings.
-- `.gitignore`: ignores dependencies, build output, environment files, and logs.
-- `.env.example`: documents model configuration.
-- `packages/shared/src/types.ts`: shared role, player, phase, message, action, and visible-state types.
-- `packages/shared/src/index.ts`: shared exports.
-- `packages/shared/package.json`: shared package metadata.
-- `apps/server/src/game/rules.ts`: constants and pure rule helpers.
-- `apps/server/src/game/createGame.ts`: game creation, player creation, random role assignment.
-- `apps/server/src/game/visibleState.ts`: frontend and agent view projection.
-- `apps/server/src/game/reducer.ts`: state transitions and validation.
-- `apps/server/src/game/fallbacks.ts`: deterministic fallback decisions for failed agent outputs.
-- `apps/server/src/agents/modelClient.ts`: OpenAI-compatible HTTP client.
-- `apps/server/src/agents/prompts.ts`: prompt builders using only allowed visible state.
-- `apps/server/src/agents/agentService.ts`: JSON parsing, retry, and fallback orchestration.
-- `apps/server/src/api/server.ts`: Fastify app and HTTP routes.
-- `apps/server/src/index.ts`: server entry point.
-- `apps/server/test/game/*.test.ts`: game engine tests.
-- `apps/server/test/agents/*.test.ts`: prompt, parser, and fallback tests.
-- `apps/server/package.json`: server scripts and dependencies.
-- `apps/server/tsconfig.json`: server TypeScript config.
-- `apps/server/vitest.config.ts`: server test config.
-- `apps/web/src/api.ts`: HTTP API client.
-- `apps/web/src/App.tsx`: main game UI.
-- `apps/web/src/components/*.tsx`: player list, chat log, action panel, identity panel.
-- `apps/web/src/styles.css`: MVP layout and visual styling.
-- `apps/web/src/main.tsx`: React entry point.
-- `apps/web/package.json`: frontend scripts and dependencies.
-- `apps/web/tsconfig.json`: frontend TypeScript config.
-- `apps/web/vite.config.ts`: Vite config with `/api` proxy.
+**技术栈：** TypeScript、pnpm workspace、Node.js、Fastify、Vitest、React、Vite、普通 CSS、OpenAI 兼容 Chat Completions API。
 
 ---
 
-### Task 1: Scaffold Workspace
+## 文件结构
 
-**Files:**
-- Create: `package.json`
-- Create: `pnpm-workspace.yaml`
-- Create: `tsconfig.base.json`
-- Create: `.gitignore`
-- Create: `.env.example`
-- Modify: `README.md`
+第一版创建一个小型工作区，按职责拆分文件：
 
-- [ ] **Step 1: Create root package metadata**
+- `package.json`：根目录脚本。
+- `pnpm-workspace.yaml`：工作区包列表。
+- `tsconfig.base.json`：共享 TypeScript 配置。
+- `.gitignore`：忽略依赖、构建产物、环境变量和日志。
+- `.env.example`：记录模型配置项。
+- `packages/shared/src/types.ts`：共享角色、玩家、阶段、消息、动作、可见状态类型。
+- `packages/shared/src/index.ts`：共享包导出入口。
+- `packages/shared/package.json`：共享包元数据。
+- `apps/server/src/game/rules.ts`：规则常量和纯规则辅助函数。
+- `apps/server/src/game/createGame.ts`：创建对局、创建玩家、随机分配身份。
+- `apps/server/src/game/visibleState.ts`：生成前端视角和 agent 视角。
+- `apps/server/src/game/reducer.ts`：状态流转和动作校验。
+- `apps/server/src/game/fallbacks.ts`：模型失败时的兜底决策。
+- `apps/server/src/agents/modelClient.ts`：OpenAI 兼容 HTTP 客户端。
+- `apps/server/src/agents/prompts.ts`：只基于可见信息构造 prompt。
+- `apps/server/src/agents/agentService.ts`：JSON 解析、重试、兜底编排。
+- `apps/server/src/api/server.ts`：Fastify 应用和 HTTP 路由。
+- `apps/server/src/index.ts`：后端启动入口。
+- `apps/server/test/game/*.test.ts`：规则引擎测试。
+- `apps/server/test/agents/*.test.ts`：prompt、解析和兜底测试。
+- `apps/server/package.json`：后端脚本和依赖。
+- `apps/server/tsconfig.json`：后端 TypeScript 配置。
+- `apps/server/vitest.config.ts`：后端测试配置。
+- `apps/web/src/api.ts`：前端 HTTP API 客户端。
+- `apps/web/src/App.tsx`：主界面。
+- `apps/web/src/components/*.tsx`：玩家列表、聊天记录、操作面板、身份面板。
+- `apps/web/src/styles.css`：MVP 布局和视觉样式。
+- `apps/web/src/main.tsx`：React 入口。
+- `apps/web/package.json`：前端脚本和依赖。
+- `apps/web/tsconfig.json`：前端 TypeScript 配置。
+- `apps/web/vite.config.ts`：Vite 配置和 `/api` 代理。
 
-Create `package.json` with workspace scripts:
+---
+
+### 任务 1：搭建工作区
+
+**文件：**
+- 新建：`package.json`
+- 新建：`pnpm-workspace.yaml`
+- 新建：`tsconfig.base.json`
+- 新建：`.gitignore`
+- 新建：`.env.example`
+- 修改：`README.md`
+
+- [ ] **步骤 1：创建根目录包配置**
+
+创建 `package.json`：
 
 ```json
 {
@@ -80,9 +80,9 @@ Create `package.json` with workspace scripts:
 }
 ```
 
-- [ ] **Step 2: Create workspace and TypeScript config**
+- [ ] **步骤 2：创建工作区和 TypeScript 基础配置**
 
-Create `pnpm-workspace.yaml`:
+创建 `pnpm-workspace.yaml`：
 
 ```yaml
 packages:
@@ -90,7 +90,7 @@ packages:
   - "packages/*"
 ```
 
-Create `tsconfig.base.json`:
+创建 `tsconfig.base.json`：
 
 ```json
 {
@@ -108,9 +108,9 @@ Create `tsconfig.base.json`:
 }
 ```
 
-- [ ] **Step 3: Add environment and ignore files**
+- [ ] **步骤 3：创建环境变量示例和忽略规则**
 
-Create `.gitignore`:
+创建 `.gitignore`：
 
 ```gitignore
 node_modules
@@ -122,7 +122,7 @@ coverage
 .DS_Store
 ```
 
-Create `.env.example`:
+创建 `.env.example`：
 
 ```bash
 PORT=8787
@@ -131,9 +131,9 @@ OPENAI_COMPAT_API_KEY=replace-me
 OPENAI_COMPAT_MODEL=gpt-4o-mini
 ```
 
-- [ ] **Step 4: Update README with local setup**
+- [ ] **步骤 4：更新 README 的本地启动说明**
 
-Replace `README.md` with:
+将 `README.md` 改为：
 
 ```markdown
 # werewolf-kill-single-player
@@ -151,19 +151,19 @@ pnpm dev
 前端默认运行在 Vite 端口，后端默认运行在 `http://localhost:8787`。
 ```
 
-- [ ] **Step 5: Install dependencies**
+- [ ] **步骤 5：安装依赖**
 
-Run:
+运行：
 
 ```bash
 pnpm install
 ```
 
-Expected: lockfile is created and install completes successfully.
+预期结果：生成 `pnpm-lock.yaml`，安装成功。
 
-- [ ] **Step 6: Commit scaffold**
+- [ ] **步骤 6：提交工作区骨架**
 
-Run:
+运行：
 
 ```bash
 git add package.json pnpm-workspace.yaml tsconfig.base.json .gitignore .env.example README.md pnpm-lock.yaml
@@ -172,17 +172,17 @@ git commit -m "chore: scaffold TypeScript workspace"
 
 ---
 
-### Task 2: Add Shared Domain Types
+### 任务 2：添加共享领域类型
 
-**Files:**
-- Create: `packages/shared/package.json`
-- Create: `packages/shared/src/types.ts`
-- Create: `packages/shared/src/index.ts`
-- Create: `packages/shared/tsconfig.json`
+**文件：**
+- 新建：`packages/shared/package.json`
+- 新建：`packages/shared/src/types.ts`
+- 新建：`packages/shared/src/index.ts`
+- 新建：`packages/shared/tsconfig.json`
 
-- [ ] **Step 1: Create shared package metadata**
+- [ ] **步骤 1：创建共享包配置**
 
-Create `packages/shared/package.json`:
+创建 `packages/shared/package.json`：
 
 ```json
 {
@@ -203,9 +203,9 @@ Create `packages/shared/package.json`:
 }
 ```
 
-- [ ] **Step 2: Define shared types**
+- [ ] **步骤 2：定义共享类型**
 
-Create `packages/shared/src/types.ts` with these exported types:
+创建 `packages/shared/src/types.ts`：
 
 ```ts
 export type Role = "werewolf" | "seer" | "witch" | "villager";
@@ -292,17 +292,17 @@ export interface NightActionRequest {
 }
 ```
 
-- [ ] **Step 3: Export shared module**
+- [ ] **步骤 3：创建共享包导出入口**
 
-Create `packages/shared/src/index.ts`:
+创建 `packages/shared/src/index.ts`：
 
 ```ts
 export * from "./types";
 ```
 
-- [ ] **Step 4: Add shared TypeScript config**
+- [ ] **步骤 4：添加共享包 TypeScript 配置**
 
-Create `packages/shared/tsconfig.json`:
+创建 `packages/shared/tsconfig.json`：
 
 ```json
 {
@@ -316,20 +316,20 @@ Create `packages/shared/tsconfig.json`:
 }
 ```
 
-- [ ] **Step 5: Verify shared package**
+- [ ] **步骤 5：验证共享包**
 
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/shared typecheck
 pnpm --filter @werewolf/shared build
 ```
 
-Expected: both commands pass.
+预期结果：两个命令都通过。
 
-- [ ] **Step 6: Commit shared types**
+- [ ] **步骤 6：提交共享类型**
 
-Run:
+运行：
 
 ```bash
 git add packages/shared
@@ -338,22 +338,22 @@ git commit -m "feat(shared): add game domain types"
 
 ---
 
-### Task 3: Implement Game Creation and Visibility Rules
+### 任务 3：实现对局创建和可见状态
 
-**Files:**
-- Create: `apps/server/package.json`
-- Create: `apps/server/tsconfig.json`
-- Create: `apps/server/vitest.config.ts`
-- Create: `apps/server/src/game/types.ts`
-- Create: `apps/server/src/game/rules.ts`
-- Create: `apps/server/src/game/createGame.ts`
-- Create: `apps/server/src/game/visibleState.ts`
-- Create: `apps/server/test/game/createGame.test.ts`
-- Create: `apps/server/test/game/visibleState.test.ts`
+**文件：**
+- 新建：`apps/server/package.json`
+- 新建：`apps/server/tsconfig.json`
+- 新建：`apps/server/vitest.config.ts`
+- 新建：`apps/server/src/game/types.ts`
+- 新建：`apps/server/src/game/rules.ts`
+- 新建：`apps/server/src/game/createGame.ts`
+- 新建：`apps/server/src/game/visibleState.ts`
+- 新建：`apps/server/test/game/createGame.test.ts`
+- 新建：`apps/server/test/game/visibleState.test.ts`
 
-- [ ] **Step 1: Create server package**
+- [ ] **步骤 1：创建后端包配置**
 
-Create `apps/server/package.json` with Fastify and Vitest dependencies:
+创建 `apps/server/package.json`：
 
 ```json
 {
@@ -381,89 +381,95 @@ Create `apps/server/package.json` with Fastify and Vitest dependencies:
 }
 ```
 
-Create `apps/server/tsconfig.json` and `apps/server/vitest.config.ts` using the root config and Node test environment.
+创建 `apps/server/tsconfig.json` 和 `apps/server/vitest.config.ts`，继承根目录配置，并使用 Node 测试环境。
 
-- [ ] **Step 2: Write creation tests first**
+- [ ] **步骤 2：先写创建对局测试**
 
-Create tests that verify:
+创建测试，覆盖：
 
-- A new game has exactly six players.
-- Role counts are 2 werewolves, 1 seer, 1 witch, 2 villagers.
-- Exactly one player has `kind: "human"`.
-- The initial phase is `night_werewolf`.
+- 新对局正好有 6 名玩家。
+- 身份数量为 2 狼人、1 预言家、1 女巫、2 村民。
+- 正好 1 名玩家是 `kind: "human"`。
+- 初始阶段是 `night_werewolf`。
 
-Run:
-
-```bash
-pnpm --filter @werewolf/server test apps/server/test/game/createGame.test.ts
-```
-
-Expected: FAIL because implementation files do not exist.
-
-- [ ] **Step 3: Implement internal game types and creation**
-
-Define internal `GameState`, `PlayerState`, `NightState`, `VoteState`, and `AgentPersona` in `apps/server/src/game/types.ts`.
-
-Implement `createGame({ humanPlayerId?, rng? })` in `apps/server/src/game/createGame.ts`:
-
-- Create six players named `你`, `林夕`, `周野`, `沈舟`, `许宁`, `顾白`.
-- Assign one human and five agents.
-- Shuffle the fixed role list.
-- Start at round 1 and phase `night_werewolf`.
-- Initialize witch antidote and poison as available.
-- Add a system message announcing the game start without revealing hidden roles.
-
-- [ ] **Step 4: Run creation tests**
-
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/game/createGame.test.ts
 ```
 
-Expected: PASS.
+预期结果：失败，因为实现文件还不存在。
 
-- [ ] **Step 5: Write visibility tests**
+- [ ] **步骤 3：实现内部状态类型和创建逻辑**
 
-Create tests that verify:
+在 `apps/server/src/game/types.ts` 定义：
 
-- Human visible state includes the human role.
-- A human werewolf sees werewolf ally IDs.
-- A human villager does not see any hidden roles.
-- Public player list does not reveal living hidden roles.
-- Agent visible state for a werewolf includes allies.
-- Agent visible state for a villager excludes hidden roles.
+- `GameState`
+- `PlayerState`
+- `NightState`
+- `VoteState`
+- `AgentPersona`
 
-Run:
+在 `apps/server/src/game/createGame.ts` 实现 `createGame({ humanPlayerId?, rng? })`：
+
+- 创建 6 名玩家：`你`、`林夕`、`周野`、`沈舟`、`许宁`、`顾白`。
+- 设置 1 名真人和 5 名 agent。
+- 随机打乱固定身份列表。
+- 从第 1 晚的 `night_werewolf` 开始。
+- 初始化女巫解药和毒药为可用。
+- 添加一条不泄露隐藏身份的系统开局消息。
+
+- [ ] **步骤 4：运行创建对局测试**
+
+运行：
+
+```bash
+pnpm --filter @werewolf/server test apps/server/test/game/createGame.test.ts
+```
+
+预期结果：通过。
+
+- [ ] **步骤 5：先写可见状态测试**
+
+创建测试，覆盖：
+
+- 真人可见状态包含真人自己的身份。
+- 真人是狼人时能看到狼队友 ID。
+- 真人是村民时看不到隐藏身份。
+- 公开玩家列表不会暴露存活玩家的隐藏身份。
+- 狼人 agent 视角包含队友信息。
+- 村民 agent 视角不包含隐藏身份信息。
+
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/game/visibleState.test.ts
 ```
 
-Expected: FAIL before visibility implementation.
+预期结果：实现前失败。
 
-- [ ] **Step 6: Implement visibility projections**
+- [ ] **步骤 6：实现视角投影**
 
-In `visibleState.ts`, implement:
+在 `visibleState.ts` 实现：
 
 - `toHumanVisibleState(game: GameState): VisibleGameState`
 - `toAgentVisibleState(game: GameState, agentId: string)`
 
-Ensure neither function returns complete hidden state. Agent view may be server-only and does not need to match frontend response shape.
+要求：这两个函数都不能返回完整隐藏状态。agent 视角是服务端内部使用的结构，不需要和前端响应完全一致。
 
-- [ ] **Step 7: Run visibility tests**
+- [ ] **步骤 7：运行可见状态测试**
 
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/game/visibleState.test.ts
 ```
 
-Expected: PASS.
+预期结果：通过。
 
-- [ ] **Step 8: Commit game creation**
+- [ ] **步骤 8：提交对局创建和视角隔离**
 
-Run:
+运行：
 
 ```bash
 git add apps/server packages/shared package.json pnpm-lock.yaml
@@ -472,133 +478,133 @@ git commit -m "feat(server): add game creation and visibility rules"
 
 ---
 
-### Task 4: Implement Core Rule Reducer
+### 任务 4：实现核心规则状态机
 
-**Files:**
-- Create: `apps/server/src/game/reducer.ts`
-- Create: `apps/server/test/game/night.test.ts`
-- Create: `apps/server/test/game/vote.test.ts`
-- Create: `apps/server/test/game/winConditions.test.ts`
+**文件：**
+- 新建：`apps/server/src/game/reducer.ts`
+- 新建：`apps/server/test/game/night.test.ts`
+- 新建：`apps/server/test/game/vote.test.ts`
+- 新建：`apps/server/test/game/winConditions.test.ts`
 
-- [ ] **Step 1: Write night resolution tests**
+- [ ] **步骤 1：先写夜晚结算测试**
 
-Create tests for:
+创建测试，覆盖：
 
-- Werewolf kill marks the night victim.
-- Seer check records `werewolves` for a werewolf and `villagers` for non-werewolf.
-- Witch antidote prevents the night victim from dying and consumes antidote.
-- Witch poison kills the selected target and consumes poison.
-- Dead players are excluded from future candidate lists.
+- 狼人击杀会记录当晚被杀目标。
+- 预言家查验狼人得到 `werewolves`，查验非狼人得到 `villagers`。
+- 女巫使用解药会阻止当晚被杀目标死亡，并消耗解药。
+- 女巫使用毒药会毒死目标，并消耗毒药。
+- 已死亡玩家不会出现在后续候选目标里。
 
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/game/night.test.ts
 ```
 
-Expected: FAIL.
+预期结果：失败。
 
-- [ ] **Step 2: Implement night reducer functions**
+- [ ] **步骤 2：实现夜晚 reducer 函数**
 
-In `reducer.ts`, implement pure functions:
+在 `reducer.ts` 实现纯函数：
 
 - `submitWerewolfKill(game, actorId, targetId)`
 - `submitSeerCheck(game, actorId, targetId)`
 - `submitWitchAction(game, actorId, action)`
 - `advanceAfterNight(game)`
 
-Each function returns a new `GameState` and validates phase, actor role, actor status, and target status.
+每个函数返回新的 `GameState`，并校验阶段、行动者身份、行动者存活状态、目标存活状态。
 
-- [ ] **Step 3: Run night tests**
+- [ ] **步骤 3：运行夜晚测试**
 
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/game/night.test.ts
 ```
 
-Expected: PASS.
+预期结果：通过。
 
-- [ ] **Step 4: Write voting tests**
+- [ ] **步骤 4：先写投票测试**
 
-Create tests for:
+创建测试，覆盖：
 
-- A valid vote is recorded once per alive voter.
-- Repeated vote from same player replaces previous vote or is rejected consistently; choose replacement for MVP.
-- Highest vote target is exiled.
-- Tie for highest votes exiles nobody.
-- Exiled player status becomes dead.
+- 存活玩家的合法投票会被记录。
+- 同一玩家重复投票时采用“后投覆盖前投”的 MVP 规则。
+- 最高票目标被放逐。
+- 最高票平票时无人出局。
+- 被放逐玩家状态变为死亡。
 
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/game/vote.test.ts
 ```
 
-Expected: FAIL.
+预期结果：失败。
 
-- [ ] **Step 5: Implement voting reducer functions**
+- [ ] **步骤 5：实现发言和投票 reducer 函数**
 
-In `reducer.ts`, implement:
+在 `reducer.ts` 实现：
 
 - `submitSpeech(game, playerId, content)`
 - `submitVote(game, voterId, targetId?)`
 - `resolveVotes(game)`
 - `advanceToNextNight(game)`
 
-Public messages should be appended for human and agent speeches, vote summaries, exile results, and peaceful tie results.
+要求：公开消息中追加真人和 agent 发言、投票摘要、放逐结果、平票无人出局结果。
 
-- [ ] **Step 6: Run voting tests**
+- [ ] **步骤 6：运行投票测试**
 
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/game/vote.test.ts
 ```
 
-Expected: PASS.
+预期结果：通过。
 
-- [ ] **Step 7: Write win condition tests**
+- [ ] **步骤 7：先写胜负判断测试**
 
-Create tests for:
+创建测试，覆盖：
 
-- Villagers win when all werewolves are dead.
-- Werewolves win when alive werewolves are greater than or equal to alive non-werewolves.
-- No winner while both teams can continue.
-- Win is checked after night deaths and after exile.
+- 狼人全灭时好人胜利。
+- 存活狼人人数大于等于存活非狼人人数时狼人胜利。
+- 双方都能继续时没有胜者。
+- 夜晚死亡结算后和放逐结算后都会检查胜负。
 
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/game/winConditions.test.ts
 ```
 
-Expected: FAIL.
+预期结果：失败。
 
-- [ ] **Step 8: Implement win condition checks**
+- [ ] **步骤 8：实现胜负和候选目标辅助函数**
 
-In `rules.ts`, implement:
+在 `rules.ts` 实现：
 
 - `getTeam(role: Role): Team`
 - `getAlivePlayers(game)`
 - `getWinner(game): Team | undefined`
-- Candidate helpers for kill, seer, witch poison, and vote actions.
+- 狼人击杀、预言家查验、女巫毒药、投票的候选目标函数。
 
-Call `getWinner` from reducer transitions after night resolution and exile resolution.
+在夜晚结算和放逐结算后调用 `getWinner`。
 
-- [ ] **Step 9: Run reducer test suite**
+- [ ] **步骤 9：运行规则测试套件**
 
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/game
 ```
 
-Expected: PASS.
+预期结果：通过。
 
-- [ ] **Step 10: Commit reducer**
+- [ ] **步骤 10：提交规则状态机**
 
-Run:
+运行：
 
 ```bash
 git add apps/server/src/game apps/server/test/game
@@ -607,38 +613,38 @@ git commit -m "feat(server): implement werewolf rule reducer"
 
 ---
 
-### Task 5: Implement Agent Adapter and Fallbacks
+### 任务 5：实现 agent 适配层和兜底策略
 
-**Files:**
-- Create: `apps/server/src/game/fallbacks.ts`
-- Create: `apps/server/src/agents/modelClient.ts`
-- Create: `apps/server/src/agents/prompts.ts`
-- Create: `apps/server/src/agents/agentService.ts`
-- Create: `apps/server/test/agents/fallbacks.test.ts`
-- Create: `apps/server/test/agents/prompts.test.ts`
-- Create: `apps/server/test/agents/agentService.test.ts`
+**文件：**
+- 新建：`apps/server/src/game/fallbacks.ts`
+- 新建：`apps/server/src/agents/modelClient.ts`
+- 新建：`apps/server/src/agents/prompts.ts`
+- 新建：`apps/server/src/agents/agentService.ts`
+- 新建：`apps/server/test/agents/fallbacks.test.ts`
+- 新建：`apps/server/test/agents/prompts.test.ts`
+- 新建：`apps/server/test/agents/agentService.test.ts`
 
-- [ ] **Step 1: Write fallback tests**
+- [ ] **步骤 1：先写兜底策略测试**
 
-Create tests that verify:
+创建测试，覆盖：
 
-- Speech fallback returns a short non-empty speech.
-- Werewolf fallback chooses an alive non-werewolf when possible.
-- Seer fallback chooses an alive unchecked target when possible.
-- Witch fallback defaults to no antidote and no poison.
-- Vote fallback returns no target.
+- 发言兜底返回一段非空短文本。
+- 狼人兜底在可能时选择一名存活非狼人。
+- 预言家兜底在可能时选择一名未查验的存活目标。
+- 女巫兜底默认不用解药、不用毒药。
+- 投票兜底返回弃票。
 
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/agents/fallbacks.test.ts
 ```
 
-Expected: FAIL.
+预期结果：失败。
 
-- [ ] **Step 2: Implement fallback helpers**
+- [ ] **步骤 2：实现兜底辅助函数**
 
-In `fallbacks.ts`, export:
+在 `fallbacks.ts` 导出：
 
 - `fallbackSpeech()`
 - `fallbackWerewolfKill(game, actorId)`
@@ -646,76 +652,82 @@ In `fallbacks.ts`, export:
 - `fallbackWitchAction()`
 - `fallbackVote()`
 
-Use existing candidate helpers from `rules.ts`.
+目标选择复用 `rules.ts` 里的候选目标函数。
 
-- [ ] **Step 3: Run fallback tests**
+- [ ] **步骤 3：运行兜底测试**
 
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/agents/fallbacks.test.ts
 ```
 
-Expected: PASS.
+预期结果：通过。
 
-- [ ] **Step 4: Write prompt isolation tests**
+- [ ] **步骤 4：先写 prompt 信息隔离测试**
 
-Create tests that verify:
+创建测试，覆盖：
 
-- A villager prompt does not contain `werewolfAllyIds`.
-- A villager prompt does not contain other players' hidden roles.
-- A werewolf prompt contains ally IDs.
-- The prompt includes public messages and current phase.
+- 村民 prompt 不包含 `werewolfAllyIds`。
+- 村民 prompt 不包含其他玩家隐藏身份。
+- 狼人 prompt 包含队友 ID。
+- prompt 包含公开消息和当前阶段。
 
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/agents/prompts.test.ts
 ```
 
-Expected: FAIL.
+预期结果：失败。
 
-- [ ] **Step 5: Implement prompt builders**
+- [ ] **步骤 5：实现 prompt 构造函数**
 
-In `prompts.ts`, implement prompt builders for:
+在 `prompts.ts` 实现以下 prompt 构造：
 
-- speech
-- vote
-- werewolf kill
-- seer check
-- witch action
+- 白天发言
+- 投票
+- 狼人击杀
+- 预言家查验
+- 女巫行动
 
-Every prompt must be built from `toAgentVisibleState`, not from raw `GameState` serialization.
+要求：所有 prompt 必须基于 `toAgentVisibleState` 构造，不能直接序列化原始 `GameState`。
 
-- [ ] **Step 6: Implement model client and agent service**
+- [ ] **步骤 6：实现模型客户端和 agent 服务**
 
-In `modelClient.ts`, implement `createModelClientFromEnv()` and a `completeJson(prompt)` method that calls:
+在 `modelClient.ts` 实现 `createModelClientFromEnv()` 和 `completeJson(prompt)`，请求：
 
 ```text
 POST {OPENAI_COMPAT_BASE_URL}/chat/completions
 ```
 
-with `Authorization: Bearer {OPENAI_COMPAT_API_KEY}` and the configured model.
+请求头使用：
 
-In `agentService.ts`, implement:
+```text
+Authorization: Bearer {OPENAI_COMPAT_API_KEY}
+```
 
-- JSON parsing with one retry.
-- Shape validation for target IDs.
-- Fallback use after invalid JSON, invalid target, or thrown model error.
+模型名来自 `OPENAI_COMPAT_MODEL`。
 
-- [ ] **Step 7: Run agent tests**
+在 `agentService.ts` 实现：
 
-Run:
+- JSON 解析失败后重试一次。
+- 校验返回目标 ID 是否合法。
+- JSON 非法、目标非法、模型请求异常时使用兜底策略。
+
+- [ ] **步骤 7：运行 agent 测试**
+
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/agents
 ```
 
-Expected: PASS with mocked model client.
+预期结果：使用 mock 模型客户端时通过。
 
-- [ ] **Step 8: Commit agent layer**
+- [ ] **步骤 8：提交 agent 层**
 
-Run:
+运行：
 
 ```bash
 git add apps/server/src/agents apps/server/src/game/fallbacks.ts apps/server/test/agents
@@ -724,46 +736,46 @@ git commit -m "feat(server): add agent prompts and fallbacks"
 
 ---
 
-### Task 6: Implement HTTP API and In-Memory Game Session
+### 任务 6：实现 HTTP API 和内存对局会话
 
-**Files:**
-- Create: `apps/server/src/api/gameSession.ts`
-- Create: `apps/server/src/api/server.ts`
-- Create: `apps/server/src/index.ts`
-- Create: `apps/server/test/api/server.test.ts`
+**文件：**
+- 新建：`apps/server/src/api/gameSession.ts`
+- 新建：`apps/server/src/api/server.ts`
+- 新建：`apps/server/src/index.ts`
+- 新建：`apps/server/test/api/server.test.ts`
 
-- [ ] **Step 1: Write API tests**
+- [ ] **步骤 1：先写 API 测试**
 
-Create tests with Fastify injection for:
+使用 Fastify injection 创建测试，覆盖：
 
-- `POST /api/game/start` returns a visible state.
-- `POST /api/game/speech` accepts the human speech when current action is speech.
-- `POST /api/game/vote` accepts a human vote when current action is vote.
-- `POST /api/game/night-action` accepts a valid human night action.
-- Responses never include raw hidden role maps or full internal state.
+- `POST /api/game/start` 返回可见状态。
+- `POST /api/game/speech` 在当前动作是发言时接受真人发言。
+- `POST /api/game/vote` 在当前动作是投票时接受真人投票。
+- `POST /api/game/night-action` 接受合法真人夜间行动。
+- 响应中不包含原始隐藏身份映射或完整内部状态。
 
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/api/server.test.ts
 ```
 
-Expected: FAIL.
+预期结果：失败。
 
-- [ ] **Step 2: Implement session orchestrator**
+- [ ] **步骤 2：实现内存会话编排器**
 
-In `gameSession.ts`, implement an in-memory singleton session that:
+在 `gameSession.ts` 实现单例内存会话：
 
-- Starts a new game.
-- Stores current `GameState`.
-- Accepts human actions.
-- Automatically advances through AI-only steps by calling `agentService`.
-- Stops when the next required action belongs to the human or the game is over.
-- Returns `toHumanVisibleState`.
+- 开始新对局。
+- 保存当前 `GameState`。
+- 接收真人动作。
+- 遇到 AI 专属步骤时调用 `agentService` 自动推进。
+- 推进到下一个需要真人操作的阶段或游戏结束时停止。
+- 返回 `toHumanVisibleState`。
 
-- [ ] **Step 3: Implement Fastify routes**
+- [ ] **步骤 3：实现 Fastify 路由**
 
-In `server.ts`, create routes:
+在 `server.ts` 创建路由：
 
 - `GET /api/health`
 - `POST /api/game/start`
@@ -773,22 +785,22 @@ In `server.ts`, create routes:
 - `POST /api/game/night-action`
 - `POST /api/game/next`
 
-In `index.ts`, start the server on `PORT || 8787`.
+在 `index.ts` 中监听 `PORT || 8787`。
 
-- [ ] **Step 4: Run API tests**
+- [ ] **步骤 4：运行 API 测试和类型检查**
 
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/server test apps/server/test/api/server.test.ts
 pnpm --filter @werewolf/server typecheck
 ```
 
-Expected: PASS.
+预期结果：通过。
 
-- [ ] **Step 5: Commit API layer**
+- [ ] **步骤 5：提交 API 层**
 
-Run:
+运行：
 
 ```bash
 git add apps/server/src/api apps/server/src/index.ts apps/server/test/api
@@ -797,25 +809,25 @@ git commit -m "feat(server): expose game HTTP API"
 
 ---
 
-### Task 7: Build React MVP UI
+### 任务 7：构建 React MVP 界面
 
-**Files:**
-- Create: `apps/web/package.json`
-- Create: `apps/web/tsconfig.json`
-- Create: `apps/web/vite.config.ts`
-- Create: `apps/web/index.html`
-- Create: `apps/web/src/main.tsx`
-- Create: `apps/web/src/api.ts`
-- Create: `apps/web/src/App.tsx`
-- Create: `apps/web/src/components/PlayerList.tsx`
-- Create: `apps/web/src/components/ChatLog.tsx`
-- Create: `apps/web/src/components/ActionPanel.tsx`
-- Create: `apps/web/src/components/IdentityPanel.tsx`
-- Create: `apps/web/src/styles.css`
+**文件：**
+- 新建：`apps/web/package.json`
+- 新建：`apps/web/tsconfig.json`
+- 新建：`apps/web/vite.config.ts`
+- 新建：`apps/web/index.html`
+- 新建：`apps/web/src/main.tsx`
+- 新建：`apps/web/src/api.ts`
+- 新建：`apps/web/src/App.tsx`
+- 新建：`apps/web/src/components/PlayerList.tsx`
+- 新建：`apps/web/src/components/ChatLog.tsx`
+- 新建：`apps/web/src/components/ActionPanel.tsx`
+- 新建：`apps/web/src/components/IdentityPanel.tsx`
+- 新建：`apps/web/src/styles.css`
 
-- [ ] **Step 1: Create frontend package**
+- [ ] **步骤 1：创建前端包配置**
 
-Create `apps/web/package.json` with React, Vite, and TypeScript scripts:
+创建 `apps/web/package.json`：
 
 ```json
 {
@@ -844,9 +856,9 @@ Create `apps/web/package.json` with React, Vite, and TypeScript scripts:
 }
 ```
 
-- [ ] **Step 2: Add Vite and React entry files**
+- [ ] **步骤 2：添加 Vite 和 React 入口**
 
-Create Vite config with proxy:
+创建 `apps/web/vite.config.ts`：
 
 ```ts
 import react from "@vitejs/plugin-react";
@@ -862,11 +874,11 @@ export default defineConfig({
 });
 ```
 
-Create `index.html`, `src/main.tsx`, and TypeScript config.
+创建 `index.html`、`src/main.tsx` 和 `tsconfig.json`。
 
-- [ ] **Step 3: Implement API client**
+- [ ] **步骤 3：实现前端 API 客户端**
 
-In `api.ts`, implement functions:
+在 `api.ts` 实现：
 
 - `startGame()`
 - `getState()`
@@ -875,50 +887,50 @@ In `api.ts`, implement functions:
 - `submitNightAction(request)`
 - `requestNext()`
 
-Each function calls the matching `/api/game/*` endpoint and returns `VisibleGameState`.
+每个函数调用对应的 `/api/game/*` 端点，并返回 `VisibleGameState`。
 
-- [ ] **Step 4: Implement UI components**
+- [ ] **步骤 4：实现 UI 组件**
 
-Build a single-screen app with:
+构建单屏游戏界面：
 
-- Left player list.
-- Center chat log.
-- Right action panel.
-- Bottom or side identity panel.
+- 左侧玩家列表。
+- 中间聊天记录。
+- 右侧操作面板。
+- 底部或侧边身份面板。
 
-The action panel must render controls based on `state.currentAction.type`:
+操作面板根据 `state.currentAction.type` 渲染：
 
-- `none`: show continue button.
-- `speech`: textarea and submit button.
-- `vote`: candidate buttons and abstain button.
-- `werewolf_kill`: target buttons.
-- `seer_check`: target buttons.
-- `witch_save_or_poison`: antidote and poison controls.
+- `none`：继续按钮。
+- `speech`：文本框和提交按钮。
+- `vote`：候选按钮和弃票按钮。
+- `werewolf_kill`：目标按钮。
+- `seer_check`：目标按钮。
+- `witch_save_or_poison`：解药和毒药控制。
 
-- [ ] **Step 5: Add MVP styling**
+- [ ] **步骤 5：添加 MVP 样式**
 
-Use plain CSS with stable responsive layout:
+使用普通 CSS：
 
-- Desktop: three-column layout.
-- Mobile: stacked layout.
-- Chat log scrolls independently.
-- Buttons and panels avoid text overflow.
-- No decorative landing page.
+- 桌面端三栏布局。
+- 移动端上下堆叠。
+- 聊天记录独立滚动。
+- 按钮和面板文字不溢出。
+- 不做营销落地页。
 
-- [ ] **Step 6: Verify frontend build**
+- [ ] **步骤 6：验证前端构建**
 
-Run:
+运行：
 
 ```bash
 pnpm --filter @werewolf/web typecheck
 pnpm --filter @werewolf/web build
 ```
 
-Expected: PASS.
+预期结果：通过。
 
-- [ ] **Step 7: Commit frontend**
+- [ ] **步骤 7：提交前端界面**
 
-Run:
+运行：
 
 ```bash
 git add apps/web
@@ -927,15 +939,15 @@ git commit -m "feat(web): add playable game interface"
 
 ---
 
-### Task 8: End-to-End Local Verification
+### 任务 8：本地端到端验证
 
-**Files:**
-- Modify: `README.md`
-- Modify: only the implementation files that fail the checks in this task, keeping fixes scoped to the failing behavior
+**文件：**
+- 修改：`README.md`
+- 修改：本任务检查失败时对应的实现文件，修复范围必须只围绕失败行为
 
-- [ ] **Step 1: Run full automated checks**
+- [ ] **步骤 1：运行全部自动化检查**
 
-Run:
+运行：
 
 ```bash
 pnpm typecheck
@@ -943,75 +955,75 @@ pnpm test
 pnpm build
 ```
 
-Expected: all commands pass.
+预期结果：全部通过。
 
-- [ ] **Step 2: Start local app**
+- [ ] **步骤 2：启动本地应用**
 
-Run:
+运行：
 
 ```bash
 pnpm dev
 ```
 
-Expected:
+预期结果：
 
-- Server starts on `http://localhost:8787`.
-- Vite prints a local frontend URL.
+- 后端启动在 `http://localhost:8787`。
+- Vite 打印前端本地访问地址。
 
-- [ ] **Step 3: Manually play through a smoke game**
+- [ ] **步骤 3：手动完成一局冒烟对局**
 
-In the browser:
+在浏览器中：
 
-- Start a game.
-- Confirm human identity is visible.
-- Confirm hidden roles are not visible in the player list.
-- Submit required human night action if prompted.
-- Submit day speech.
-- Submit vote.
-- Continue until either team wins.
+- 开始一局。
+- 确认真人身份可见。
+- 确认玩家列表不展示隐藏身份。
+- 如果当前需要真人夜间行动，则提交夜间行动。
+- 提交白天发言。
+- 提交投票。
+- 继续推进直到任意一方胜利。
 
-Expected: the game reaches `game_over` without a server crash.
+预期结果：游戏进入 `game_over`，后端不崩溃。
 
-- [ ] **Step 4: Update README with run and model notes**
+- [ ] **步骤 4：补充 README 的运行和模型说明**
 
-Add:
+补充：
 
-- Required environment variables.
-- How to run server and web together.
-- Note that API key remains server-side.
-- Note that `.env` must not be committed.
+- 必要环境变量。
+- 如何同时运行前端和后端。
+- API key 只保存在后端环境变量中。
+- `.env` 不允许提交。
 
-- [ ] **Step 5: Commit verification docs**
+- [ ] **步骤 5：提交验证文档**
 
-Run:
+运行：
 
 ```bash
 git add README.md
 git commit -m "docs: add MVP run instructions"
 ```
 
-- [ ] **Step 6: Push implementation branch**
+- [ ] **步骤 6：推送实现分支**
 
-Run:
+运行：
 
 ```bash
 git status --short
 git push
 ```
 
-Expected: working tree is clean and remote is updated.
+预期结果：工作区干净，远端已更新。
 
 ---
 
-## Coverage Checklist
+## 覆盖检查
 
-- 6-player fixed role setup: Task 3.
-- Human random role assignment: Task 3.
-- Rule engine for night, day, vote, and win checks: Task 4.
-- Agent visible-state isolation: Task 3 and Task 5.
-- OpenAI-compatible model layer: Task 5.
-- HTTP JSON API transport: Task 6.
-- Chat-style UI and action panels: Task 7.
-- Model failure fallback behavior: Task 5 and Task 6.
-- Automated rule tests: Task 3 and Task 4.
-- Local playable verification: Task 8.
+- 固定 6 人身份配置：任务 3。
+- 真人玩家随机参与身份分配：任务 3。
+- 夜晚、白天、投票、胜负判断规则引擎：任务 4。
+- agent 可见状态隔离：任务 3 和任务 5。
+- OpenAI 兼容模型层：任务 5。
+- HTTP JSON API 通信：任务 6。
+- 群聊式界面和操作面板：任务 7。
+- 模型失败兜底：任务 5 和任务 6。
+- 自动化规则测试：任务 3 和任务 4。
+- 本地可玩验证：任务 8。
